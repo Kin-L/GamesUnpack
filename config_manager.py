@@ -16,11 +16,12 @@ CONFIG_NAME = "config.json"
 
 
 class ConfigManager:
-    _REQUIRED_KEYS = ("ffm_path", "umo_path", "vgm_path", "out_path", "input_path")
+    _REQUIRED_KEYS = ("ffm_path", "umo_path", "vgm_path","spine_path", "out_path", "input_path")
     _TEMPLATE = {
         "ffm_path":  r"{root}\tool\ffmpeg\bin\ffmpeg.exe",
         "umo_path":  r"{root}\tool\umodel\umodel_materials.exe",
         "vgm_path":  r"{root}\tool\vgmstream\vgmstream-cli.exe",
+        "spine_path":  r"{root}\tool\spine\Spine.exe",
         "out_path":  r"{root}\out",
         "input_path": "NULL"
     }
@@ -115,3 +116,8 @@ class ConfigManager:
                 json.dump(data, f, indent=4, ensure_ascii=False)
         except Exception as e:
             logger.error(f"写入配置文件失败：{e}")
+
+def resource_path(relative_path: str) -> str:
+    base_path = os.path.join(os.path.dirname(__file__), "res")
+    logger.debug(f'资源目录：{base_path}')
+    return os.path.join(base_path, relative_path)

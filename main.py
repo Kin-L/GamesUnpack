@@ -7,6 +7,7 @@ import questionary
 
 
 from config_manager import ConfigManager
+from config_manager import resource_path
 from CBUnpack3 import CBUNpakMain
 from check import check_tool_availability
 
@@ -31,6 +32,10 @@ logger.info('''
  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ''')
 
+# 版本号和构建时间
+VER = "3.0.5"
+BUILD = "2025-7"
+
 
 
 if '__compiled__' in globals():
@@ -41,13 +46,6 @@ else:
     logger.debug('> 源码运行状态')
 
 logger.debug(f'程序目录：{root_directory}')
-
-
-
-def resource_path(relative_path: str) -> str:
-    base_path = os.path.join(os.path.dirname(__file__), "res")
-    logger.debug(f'资源目录：{base_path}')
-    return os.path.join(base_path, relative_path)
 
 
 # ======================== #
@@ -75,14 +73,14 @@ def main_menu():
             "请选择操作：",
             choices=[
                 {"name": "尘白禁区批量解包", "disabled": "CB-UNpakTool"},  # 禁用选项
-                {"name": "构建版本", "disabled": "V3.0.4"},  # 禁用选项
+                {"name": "构建版本", "disabled": "V" + VER},  # 禁用选项
                 questionary.Separator(),  # 视觉分隔线
                 {"name": "0.初始化", "value": "reset"},
                 {"name": "1.测试构建", "value": "check"},
                 {"name": "2.一键解包", "value": "CBUNpakMain"},
                 {"name": "3.独立处理", "value": "alone"},
                 questionary.Separator(),  # 添加视觉分隔线
-                {"name": "by 绘星痕、小狐狸", "disabled": "2025-7"}  # 禁用选项
+                {"name": "by 绘星痕、小狐狸", "disabled": BUILD}  # 禁用选项
                 ],
             use_arrow_keys=True # 启用箭头导航
         ).ask()
@@ -112,7 +110,7 @@ def choice_CBUNpakMain():
 
 def choice_alone():
     logger.warning("Ciallo～(∠・ω< )⌒★...")
-    audio_path = resource_path("Ciallo.wav")
+    audio_path = resource_path("Ciallo.wav") 
     winsound.PlaySound(audio_path, winsound.SND_ASYNC)
     logger.success("木落Cia草黃，登高望戎llo～(∠·ω< )⌒★。 (秋, 虜)《古風 十四》（李白）")
     logger.success("Ciallo～(∠·ω< )⌒★白如玉，團團下庭綠。 (秋, 露)《古風 二十三》（李白）")

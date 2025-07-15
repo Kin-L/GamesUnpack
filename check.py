@@ -14,6 +14,7 @@ def check_tool_availability() -> int:
         "FFmpeg":    (cfg.get("ffm_path"), ["-version"]),
         "vgmstream": (cfg.get("vgm_path"), []),
         "UModel":    (cfg.get("umo_path"), ["-help"]),
+        "Spine":    (cfg.get("spine_path"), ["--help"]),
     }
 
     failed = False  # 标记是否有检查失败
