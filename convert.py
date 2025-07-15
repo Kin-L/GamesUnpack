@@ -1,50 +1,110 @@
-import subprocess
 import os
-from PIL import Image
+import subprocess
 import binascii
-from demo.atlas_unpack import split_atlas
+from loguru import logger
+from PIL import Image
+
+from atlas_unpack import split_atlas
+from config_manager import ConfigManager
+
+
+# 工具函数：检查目录是否存在
+def check_dir(path: str, desc: str) -> bool:
+    if not os.path.isdir(path):
+        logger.warning(f"{desc} 不存在，跳过：{path}")
+        return False
+    return True
 
 
 def png_convert(file_path, out_path):
+    import tempfile
+
     root, name = os.path.split(file_path)
     file_name = os.path.splitext(name)[0]
-    subprocess.run([
-        r"D:\Program Files (Green)\umodel_win32\umodel_64.exe",
-        f"-path={root}",
-        "-game=ue4.26",
-        "-export",
-        f"-out={out_path}",
-        file_name
-    ])
+    cfg = ConfigManager()
+    umo_path = str(cfg.get("umo_path"))
+
+    if not os.path.isfile(umo_path):
+        logger.critical(f"[路径无效] UModel 路径不存在: {umo_path}")
+        return
+
+    if not os.path.exists(root):
+        logger.critical(f"[路径无效] 文件所在目录不存在: {root}")
+        return
+
+    if not os.path.exists(file_path):
+        logger.critical(f"[目标文件缺失] 指定文件不存在: {file_path}")
+        return
+
     try:
-        tga = f"{out_path}\\{file_name}.tga"
-        png = f"{out_path}\\{file_name}.png"
-        img = Image.open(tga)
-        img.save(png, "PNG")
-        print(f"转换成功: {png}")
-        os.remove(tga)
+        # 使用临时文件收集stderr
+        with tempfile.TemporaryFile(mode='w+', encoding='utf-8') as err_log:
+            subprocess.run([
+                umo_path,
+                f"-path={root}",
+                "-game=ue4.26",
+                "-export",
+                f"-out={out_path}",
+                file_name
+            ],
+            check=True,
+            stdout=subprocess.DEVNULL,
+            stderr=err_log)
+
+            # 检查是否导出成功的 .tga 文件
+            tga_candidates = [f for f in os.listdir(out_path) if f.endswith('.tga') and file_name in f]
+            if not tga_candidates:
+                logger.error(f"[TGA 导出失败] 未生成任何匹配 TGA 文件（{file_name}.tga）")
+                return
+
+            tga = os.path.join(out_path, tga_candidates[0])
+            png = os.path.join(out_path, f"{file_name}.png")
+
+            try:
+                img = Image.open(tga)
+                img.save(png, "PNG")
+                logger.success(f"[成功] PNG 生成成功: {png}")
+                os.remove(tga)
+            except Exception as e:
+                logger.error(f"[图像处理失败] 无法处理 TGA 文件 {tga} → {e}")
+
+    except subprocess.CalledProcessError as e:
+        err_log.seek(0)
+        error_output = err_log.read().strip()
+        logger.error(f"[UModel 执行失败] 导出命令返回码 {e.returncode}")
+        if error_output:
+            logger.debug(f"[UModel stderr]\n{error_output}")
+        else:
+            logger.warning(f"[无详细错误] 可能原因包括：文件名错误、未识别的资源或格式不兼容")
+
+    except FileNotFoundError:
+        logger.error(f"[文件缺失] TGA 文件未生成，或路径错误: {file_name}.tga")
+
     except Exception as e:
-        print(f"转换失败: {e}")
+        logger.exception(f"[未知错误] 在转换过程中发生异常: {e}")
+
+
 
 
 def convert_to_png(input_path, output_path):
+    if not check_dir(input_path, "输入目录"):
+        return
+
     for root, dirs, files in os.walk(input_path):
         for file in files:
             if file.endswith(".uexp"):
                 out_dir = os.path.join(output_path, root.replace(input_path, "").strip("\\"))
-                if not os.path.exists(out_dir):
-                    os.makedirs(out_dir)
+                os.makedirs(out_dir, exist_ok=True)
                 png_convert(os.path.join(root, file), out_dir)
 
 
 def split_and_save(text_data, clean_filename):
     try:
-        # 找到文件名.png到最后一个index: -1
+        # 查找文件内容
         start_png = text_data.find(f'{clean_filename}.png')
         end_atlas = text_data.rfind('index: -1') + len('index: -1')
         atlas_content = text_data[start_png:end_atlas] if start_png != -1 and end_atlas != -1 else ''
 
-        # 找到"{"skeleton":{"hash": 或者带换行的"{\n\"skeleton\": {" 到最后一个 }
         start_json = text_data.find('{\n"skeleton": {')
         if start_json == -1:
             start_json = text_data.find('{"skeleton":{"hash":')  # 修改匹配条件
@@ -52,59 +112,67 @@ def split_and_save(text_data, clean_filename):
         json_content = text_data[start_json:end_json + 1] if start_json != -1 and end_json != -1 else ''
         return atlas_content, json_content
     except Exception as e:
-        return False, False  # 表示失败
+        logger.error(f"拆分和保存时出现异常: {e}")
+        return False, False
 
 
 def convert_spine(input_path, output_path):
+    if not check_dir(input_path, "输入路径"):
+        return
+
     for root, dirs, files in os.walk(input_path):
         for filename in files:
-            if filename.endswith(".uexp"):
-                if "_a" in filename:
-                    continue
+            if filename.endswith(".uexp") and "_a" not in filename:
                 file_path = os.path.join(root, filename)
                 try:
                     with open(file_path, 'rb') as file:
-                        # 读取文件内容并转换为16进制
                         hex_data = binascii.hexlify(file.read())
-                        # 将16进制转换为文本（UTF-8解码，忽略错误）
                         text_data = bytes.fromhex(hex_data.decode('utf-8')).decode('utf-8', errors='ignore')
                 except Exception as e:
+                    logger.error(f"读取文件失败: {e}")
                     continue
-                # 尝试拆分文本并生成atlas和json文件
+
+                # 尝试拆分并保存为 atlas 和 json 文件
                 original_filename = os.path.splitext(filename)[0]
                 clean_filename = original_filename.replace('-atlas', '').replace('-data', '')
                 atlas_content, json_content = split_and_save(text_data, clean_filename)
+
                 out_dir = os.path.join(output_path, root.replace(input_path, "").strip("\\"))
-                # print(output_path, root, input_path, out_dir)
-                if not os.path.exists(out_dir):
-                    os.makedirs(out_dir)
-                # 如果有atlas内容，保存为.atlas文件
+                os.makedirs(out_dir, exist_ok=True)
+
+                # 保存 atlas 文件
                 if atlas_content:
                     atlas_filename = f"{clean_filename}.atlas"
                     atlas_path = os.path.join(out_dir, atlas_filename)
                     with open(atlas_path, 'w', encoding='utf-8') as atlas_file:
                         atlas_file.write(atlas_content)
 
-                # 如果有json内容，保存为.json文件
+                # 保存 json 文件
                 if json_content:
                     json_filename = f"{clean_filename}.json"
                     json_path = os.path.join(out_dir, json_filename)
                     with open(json_path, 'w', encoding='utf-8') as json_file:
                         json_file.write(json_content)
+
     convert_to_png(input_path, output_path)
+
+    # 拆分 atlas 文件
     for root, dirs, files in os.walk(output_path):
         for filename in files:
             if filename.endswith(".atlas"):
                 atlas_path = os.path.join(root, filename)
-                unitName = os.path.split(filename)[1]
-                outputPath = os.path.join(root, 'images')  # sub
-                # outputPath = root
-                if not os.path.exists(outputPath):
-                    os.makedirs(outputPath)
-                split_atlas(unitName, output_path=outputPath, atlas_path=atlas_path)
+                unit_name = os.path.split(filename)[1]
+                output_path_images = os.path.join(root, 'images')
+                os.makedirs(output_path_images, exist_ok=True)
+                split_atlas(unit_name, output_path=output_path_images, atlas_path=atlas_path)
+
+
 
 if __name__ == '__main__':
-    convert_to_png(r"E:\Unpack\尘白禁区\cache\step1\Game\Content\UI\Picture\DLC28",
-                   r"E:\Unpack\尘白禁区\DLC28")
+    # convert_to_png(r"E:\Unpack\尘白禁区\cache\step1\Game\Content\UI\Picture\DLC30",
+    #                r"E:\Unpack\尘白禁区\DLC30")
     # convert_spine(r"E:\Unpack\尘白禁区\step1\Game\Content\Plot\CgPlot\Dlc17_plots\PoltAsset\spine",
     #               r"E:\Unpack\尘白禁区\活动界面spine")
+    # convert_to_png(r"H:\SnowbreakContainmentZone\V3.0.0.130-20250710\UNPAK\Game\Content\UI\Pose",
+    #                r"H:\SnowbreakContainmentZone\V3.0.0.130-20250710\UNPAK\Game\Content\UI\Pose\img")
+    logger.debug("程序已退出")
