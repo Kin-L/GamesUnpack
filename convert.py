@@ -104,7 +104,7 @@ def convert_spine(input_path, output_path):
                 split_atlas(unitName, output_path=outputPath, atlas_path=atlas_path)
 
 if __name__ == '__main__':
-    convert_to_png(r"E:\Unpack\尘白禁区\cache\step1\Game\Content\UI\Picture\DLC30",
-                   r"E:\Unpack\尘白禁区\DLC30")
+    convert_to_png(r"E:\Unpack\尘白禁区\cache\step1\Game\Content\UI\Picture\DLC28",
+                   r"E:\Unpack\尘白禁区\DLC28")
     # convert_spine(r"E:\Unpack\尘白禁区\step1\Game\Content\Plot\CgPlot\Dlc17_plots\PoltAsset\spine",
     #               r"E:\Unpack\尘白禁区\活动界面spine")
