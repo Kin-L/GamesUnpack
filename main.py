@@ -1,4 +1,4 @@
-import os
+from os import path, makedirs
 import sys
 import time
 import winsound
@@ -10,7 +10,6 @@ from CBUnpack import CBUNpakIncr
 from check import check_tool_availability
 import subprocess
 from spinejsonexport import sjemain
-from pathlib import Path
 
 logger.info('''
  ###    License
@@ -40,7 +39,7 @@ if '__compiled__' in globals():
     root_directory = sys.path[0]
     logger.debug('> 打包状态')
 else:
-    root_directory = os.path.dirname(os.path.abspath(__file__))
+    root_directory = path.dirname(path.abspath(__file__))
     logger.debug('> 源码运行状态')
 
 logger.debug(f'程序目录：{root_directory}')
@@ -51,9 +50,9 @@ logger.debug(f'程序目录：{root_directory}')
 # ======================== #
 def init_logger():
     today = time.strftime("%Y-%m-%d")
-    log_directory = os.path.join(root_directory, "logs")
-    os.makedirs(os.path.dirname(log_directory), exist_ok=True)
-    log_path = os.path.join(log_directory, f"{today}.log")
+    log_directory = path.join(root_directory, "logs")
+    makedirs(path.dirname(log_directory), exist_ok=True)
+    log_path = path.join(log_directory, f"{today}.log")
     logger.remove()
     logger.add(sys.stderr, level="DEBUG")  # 控制台
     logger.add(log_path, encoding="utf-8", level="DEBUG")  # 文件日志

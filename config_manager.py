@@ -29,6 +29,7 @@ class ConfigManager:
         "quickbms_path": r"{root}\tool\quickbms\quickbms_4gb_files.exe",
         "spine_path": r"{root}\tool\spine\Spine.exe",
         "max_workers": 2,
+        "UseCNName": False,
         "pak_path": "NULL",
         "unpack_path": r"{root}\unpack",
         "resource_path": r"{root}\unpack",
@@ -43,6 +44,7 @@ class ConfigManager:
         "quickbms_path": quickbms_4gb_files.exe 文件路径
         "spine_path": Spine.exe 文件路径
         "max_workers": 多线程数
+        "UseCNName": 提取BGM文件时是否更改文件名为匹配到的中文名
         解密解包 设置路径
         "pak_path": snow_pak 文件夹路径
         "unpack_path": 解密完成，待提取资源 文件夹路径(可选，默认为 "./unpack")

@@ -1,18 +1,19 @@
-
-from os import path,makedirs, chdir
+from os import path, makedirs, remove, listdir, cpu_count
 from convert import convert_to_png, convert_spine, png_convert
-import os
 import shutil
 import subprocess
 from loguru import logger
 from config_manager import cfg
 from check import check_tool_availability
+from concurrent.futures import ThreadPoolExecutor
+UseCNName = cfg.get("UseCNName")
+vgm_path = str(cfg.get("vgm_path"))
 
 
 # 工具函数：检查路径
-def check_dir(path: str, desc: str) -> bool:
-    if not os.path.isdir(path):
-        logger.warning(f"{desc} 不存在，跳过：{path}")
+def check_dir(_path: str, desc: str) -> bool:
+    if not path.isdir(_path):
+        logger.warning(f"{desc} 不存在，跳过：{_path}")
         return False
     return True
 
@@ -33,7 +34,7 @@ def activity_ui(_past_path, _new_path, _increase_path):
         for i in _list[1]:
             pdp1 = path.join(_p2, i)
             pdp2 = path.join(path_out, i)
-            if os.path.exists(path.join(pdp1, "PoltAsset")):
+            if path.exists(path.join(pdp1, "PoltAsset")):
                 bg_path1 = path.join(pdp1, "PoltAsset", "Bg")
                 bg_path2 = path.join(pdp2, "Bg")
                 convert_to_png(bg_path1, bg_path2)
@@ -69,7 +70,7 @@ def login_ui(_past_path, _new_path, _increase_path):
     if _list[1]:
         for i in _list[1]:
             if i.endswith(".uexp"):
-                png_convert(os.path.join(_p2, i), path_out)
+                png_convert(path.join(_p2, i), path_out)
 
     _path = r"Game\Content\Plot\CgPlot\Login_Plots\PoltAsset\Spine"
     _p1 = path.join(_past_path, _path)
@@ -99,7 +100,7 @@ def ser(_past_path, _new_path, _increase_path):
     if _list[1]:
         for i in _list[1]:
             if i.endswith(".uexp"):
-                png_convert(os.path.join(_p2, i), path_out)
+                png_convert(path.join(_p2, i), path_out)
 
 
 def fashion(_past_path, _new_path, _increase_path):
@@ -117,7 +118,7 @@ def fashion(_past_path, _new_path, _increase_path):
     if _list[1]:
         for i in _list[1]:
             if i.endswith(".uexp"):
-                png_convert(os.path.join(_p2, i), path_out)
+                png_convert(path.join(_p2, i), path_out)
 
 
 def dialogue(_past_path, _new_path, _increase_path):
@@ -135,7 +136,32 @@ def dialogue(_past_path, _new_path, _increase_path):
     if _list[1]:
         for i in _list[1]:
             if i.endswith(".uexp"):
-                png_convert(os.path.join(_p2, i), path_out)
+                png_convert(path.join(_p2, i), path_out)
+
+
+def convert_audio_single(oldn, newn, path_out):
+    try:
+        # 1. 用 vgmstream 解码为 WAV
+        wav_path = path.join(path_out, f"{newn}.wav")
+        wem_path = path.join(path_out, f"{oldn}.wem")
+        subprocess.run(
+            [vgm_path, 
+             "-o", wav_path,
+             wem_path], check=True)
+
+        # 2. 用 FFmpeg 转 WAV 为 FLAC
+        subprocess.run([
+            r"D:\Program Files\ffmpeg\ffmpeg.exe",
+            "-i", wav_path,
+            "-c:a", "flac",
+            path.join(path_out, f"{newn}.flac")
+        ])
+
+    finally:
+        if path.exists(wav_path):
+            remove(wav_path)
+        if path.exists(wem_path):
+            remove(wem_path)
 
 
 def bgm(_past_path, _new_path, _increase_path):
@@ -154,10 +180,10 @@ def bgm(_past_path, _new_path, _increase_path):
     if _list[1]:
         for i in _list[1]:
             if i.endswith(".wem"):
-                shutil.copy(os.path.join(_p2, i), path.join(_increase_path, f"BGM\\{i}"))
+                shutil.copy(path.join(_p2, i), path.join(_increase_path, f"BGM\\{i}"))
                 ...
     _list = []
-    for filename in os.listdir(path_out):
+    for filename in listdir(path_out):
         if ".wem" in filename:
             _list += [filename.removesuffix(".wem")]
     # print(_list)
@@ -168,7 +194,7 @@ def bgm(_past_path, _new_path, _increase_path):
         for i in _list:
             if i in _line:
                 _l = _line.split("\t")
-                _ = [_l[1], _l[2]]+_l[2].split("_")
+                _ = [_l[1], _l[2]] + _l[2].split("_")
                 while len(_) < 6:
                     _.append("")
                 _sheet.append(_)
@@ -203,7 +229,7 @@ def bgm(_past_path, _new_path, _increase_path):
                 if i[0] == u[1]:
                     if "DLC" not in u[0]:
                         linesnum += 1
-                    lines.append(i+[u[0]])
+                    lines.append(i + [u[0]])
                     break
         # print(lines)
         _sheetsnum = 0
@@ -215,7 +241,7 @@ def bgm(_past_path, _new_path, _increase_path):
         _n1 = 0
         for n, i in enumerate(_sheet):
             for u in lines:
-                if i[3]+"_"+i[4] == u[2]:
+                if i[3] + "_" + i[4] == u[2]:
                     _sheet[n].extend(["", u[1]])
                     break
             else:
@@ -235,38 +261,29 @@ def bgm(_past_path, _new_path, _increase_path):
     with open(path.join(_increase_path, f"BGM\\sheet.txt"), 'w', encoding='utf-8') as f:
         for i in _sheet:
             f.write("\t".join(i) + "\n")
-        # print(_sheet)
+    if UseCNName:
         cnnali = [i[7] if len(i) == 8 else "" for i in _sheet]
-        # print(cnnali)
-        for name in _list:
+        nnli = []
+        for i in _sheet:
+            if len(i) == 8 and 1 == cnnali.count(cnna := i[7]):
+                nnli.append(f"{cnna} - 尘白禁区")
+            else:
+                nnli.append(i[0])
+    else:
+        nnli = list(_list)
 
-            try:
-                # 1. 用 vgmstream 解码为 WAV
-                wav_path = path.join(path_out, f"{name}.wav")
-                wem_path = path.join(path_out, f"{name}.wem")
-                subprocess.run(
-                    [r"D:\Kin-project\PythonProjects\GamesUnpack\vgmstream-win64\vgmstream-cli.exe", "-o", wav_path,
-                     wem_path], check=True)
-                for i in _sheet:
-                    if name == i[0]:
-                        cnna = i[7] if len(i) == 8 else ""
-                        if cnna and cnnali.count(cnna) == 1:
-                            name = f"{cnna} - 尘白禁区"
-                            print(name)
-                            break
-                # 2. 用 FFmpeg 转 WAV 为 FLAC
-                subprocess.run([
-                    r"D:\Program Files\ffmpeg\ffmpeg.exe",
-                    "-i", wav_path,
-                    "-c:a", "flac",
-                    path.join(path_out, f"{name}.flac")
-                ])
+    max_workers = min(32, (cpu_count() or 1) * 4)
 
-            finally:
-                if os.path.exists(wav_path):
-                    os.remove(wav_path)
-                if os.path.exists(wem_path):
-                    os.remove(wem_path)
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        # 提交所有任务到线程池，并传入索引 i
+        futures = [
+            executor.submit(convert_audio_single, oldn, newn, path_out)
+            for oldn, newn in zip(_list, nnli)
+        ]
+
+        # 可选：等待所有任务完成（with 语句会自动等待）
+        for future in futures:
+            future.result()  # 检查是否有异常
 
 
 def chara(_past_path, _new_path, _increase_path):
@@ -289,17 +306,14 @@ def chara(_past_path, _new_path, _increase_path):
 def compare_folders_by_name(dir1, dir2):
     """对比两个文件夹中的文件名差异"""
     # 获取两个文件夹中的文件列表
-    files1 = set(os.listdir(dir1))
-    files2 = set(os.listdir(dir2))
+    files1 = set(listdir(dir1))
+    files2 = set(listdir(dir2))
 
     # 找出差异
     only_in_dir1 = files1 - files2
     only_in_dir2 = files2 - files1
     common_files = files1 & files2
     return [only_in_dir1, only_in_dir2, common_files]
-
-
-
 
 
 def CBUNpakIncr():
@@ -329,5 +343,3 @@ def CBUNpakIncr():
     dialogue(past_path, new_path, increase_path)
 
     logger.success("资源处理完成 ✅")
-
-
