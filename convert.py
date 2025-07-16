@@ -3,9 +3,10 @@ import subprocess
 import binascii
 from loguru import logger
 from PIL import Image
-
+from config_manager import cfg
 from atlas_unpack import split_atlas
 from config_manager import ConfigManager
+from concurrent.futures import ThreadPoolExecutor
 
 
 # 工具函数：检查目录是否存在
@@ -84,18 +85,33 @@ def png_convert(file_path, out_path):
         logger.exception(f"[未知错误] 在转换过程中发生异常: {e}")
 
 
+def convert_png_single(file, root, input_path, output_path):
+    out_dir = os.path.join(output_path, root.replace(input_path, "").strip("\\"))
+    os.makedirs(out_dir, exist_ok=True)
+    png_convert(os.path.join(root, file), out_dir)
 
 
 def convert_to_png(input_path, output_path):
     if not check_dir(input_path, "输入目录"):
         return
-
+    _file_list = []
     for root, dirs, files in os.walk(input_path):
         for file in files:
-            if file.endswith(".uexp"):
-                out_dir = os.path.join(output_path, root.replace(input_path, "").strip("\\"))
-                os.makedirs(out_dir, exist_ok=True)
-                png_convert(os.path.join(root, file), out_dir)
+            if file.endswith(".uexp") and "_144." not in file:
+                _file_list.append([file, root])
+
+    max_workers = min(32, (os.cpu_count() or 1) * 4)
+
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        # 提交所有任务到线程池，并传入索引 i
+        futures = [
+            executor.submit(convert_png_single, file, root, input_path, output_path)
+            for file, root in _file_list
+        ]
+
+        # 可选：等待所有任务完成（with 语句会自动等待）
+        for future in futures:
+            future.result()  # 检查是否有异常
 
 
 def split_and_save(text_data, clean_filename):
@@ -116,56 +132,87 @@ def split_and_save(text_data, clean_filename):
         return False, False
 
 
+def convert_spine_single(filename, root, input_path, output_path):
+    file_path = os.path.join(root, filename)
+    try:
+        with open(file_path, 'rb') as file:
+            hex_data = binascii.hexlify(file.read())
+            text_data = bytes.fromhex(hex_data.decode('utf-8')).decode('utf-8', errors='ignore')
+    except Exception as e:
+        logger.error(f"读取文件失败: {e}")
+        return
+
+    # 尝试拆分并保存为 atlas 和 json 文件
+    original_filename = os.path.splitext(filename)[0]
+    clean_filename = original_filename.replace('-atlas', '').replace('-data', '')
+    atlas_content, json_content = split_and_save(text_data, clean_filename)
+
+    out_dir = os.path.join(output_path, root.replace(input_path, "").strip("\\"))
+    os.makedirs(out_dir, exist_ok=True)
+
+    # 保存 atlas 文件
+    if atlas_content:
+        atlas_filename = f"{clean_filename}.atlas"
+        atlas_path = os.path.join(out_dir, atlas_filename)
+        with open(atlas_path, 'w', encoding='utf-8') as atlas_file:
+            atlas_file.write(atlas_content)
+
+    # 保存 json 文件
+    if json_content:
+        json_filename = f"{clean_filename}.json"
+        json_path = os.path.join(out_dir, json_filename)
+        with open(json_path, 'w', encoding='utf-8') as json_file:
+            json_file.write(json_content)
+
+
+def convert_atlas_single(filename, root):
+    atlas_path = os.path.join(root, filename)
+    unit_name = os.path.split(filename)[1]
+    output_path_images = os.path.join(root, 'images')
+    os.makedirs(output_path_images, exist_ok=True)
+    split_atlas(unit_name, output_path=output_path_images, atlas_path=atlas_path)
+
+
 def convert_spine(input_path, output_path):
     if not check_dir(input_path, "输入路径"):
         return
-
+    _file_list = []
     for root, dirs, files in os.walk(input_path):
         for filename in files:
             if filename.endswith(".uexp") and "_a" not in filename:
-                file_path = os.path.join(root, filename)
-                try:
-                    with open(file_path, 'rb') as file:
-                        hex_data = binascii.hexlify(file.read())
-                        text_data = bytes.fromhex(hex_data.decode('utf-8')).decode('utf-8', errors='ignore')
-                except Exception as e:
-                    logger.error(f"读取文件失败: {e}")
-                    continue
+                _file_list.append([filename, root])
+    max_workers = min(32, (os.cpu_count() or 1) * 4)
 
-                # 尝试拆分并保存为 atlas 和 json 文件
-                original_filename = os.path.splitext(filename)[0]
-                clean_filename = original_filename.replace('-atlas', '').replace('-data', '')
-                atlas_content, json_content = split_and_save(text_data, clean_filename)
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        # 提交所有任务到线程池，并传入索引 i
+        futures = [
+            executor.submit(convert_spine_single, filename, root,  input_path, output_path)
+            for filename, root in _file_list
+        ]
 
-                out_dir = os.path.join(output_path, root.replace(input_path, "").strip("\\"))
-                os.makedirs(out_dir, exist_ok=True)
-
-                # 保存 atlas 文件
-                if atlas_content:
-                    atlas_filename = f"{clean_filename}.atlas"
-                    atlas_path = os.path.join(out_dir, atlas_filename)
-                    with open(atlas_path, 'w', encoding='utf-8') as atlas_file:
-                        atlas_file.write(atlas_content)
-
-                # 保存 json 文件
-                if json_content:
-                    json_filename = f"{clean_filename}.json"
-                    json_path = os.path.join(out_dir, json_filename)
-                    with open(json_path, 'w', encoding='utf-8') as json_file:
-                        json_file.write(json_content)
+        # 可选：等待所有任务完成（with 语句会自动等待）
+        for future in futures:
+            future.result()  # 检查是否有异常
 
     convert_to_png(input_path, output_path)
-
+    _file_list = []
     # 拆分 atlas 文件
     for root, dirs, files in os.walk(output_path):
         for filename in files:
             if filename.endswith(".atlas"):
-                atlas_path = os.path.join(root, filename)
-                unit_name = os.path.split(filename)[1]
-                output_path_images = os.path.join(root, 'images')
-                os.makedirs(output_path_images, exist_ok=True)
-                split_atlas(unit_name, output_path=output_path_images, atlas_path=atlas_path)
+                _file_list.append([filename, root])
+    max_workers = min(32, (os.cpu_count() or 1) * 4)
 
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        # 提交所有任务到线程池，并传入索引 i
+        futures = [
+            executor.submit(convert_atlas_single, filename, root)
+            for filename, root in _file_list
+        ]
+
+        # 可选：等待所有任务完成（with 语句会自动等待）
+        for future in futures:
+            future.result()  # 检查是否有异常
 
 
 if __name__ == '__main__':

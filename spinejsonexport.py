@@ -5,18 +5,18 @@ from typing import Dict, List, Optional, Tuple, Union
 from loguru import logger
 from typing import Optional
 
-from config_manager import ConfigManager
+from config_manager import cfg
 
 # ================== 可配置区 ==================
-cfg = ConfigManager()
 ffm_path = str(cfg.get("ffm_path"))  # 获取配置中的 FFMPEG 路径
 spine_path = str(cfg.get("spine_path"))  # 获取配置中的 FFMPEG 路径
+max_workers = cfg.get("max_workers")  # 多线程数
 SPINE_EXE = spine_path # Spine 可执行文件
 VERSION = "3.8.75"  # 须与安装包版本一致
 DEFAULT_OUTPUT_DIR = "export"  # 默认输出目录
 DEFAULT_TEMPLATE_NAME = "template.export.json"  # 自动生成的模板文件名
-CLEANUP = False  # 是否执行动画清理
-BASE_DIR = Path(r"H:\SnowbreakContainmentZone\GameUnpack-master\CBUnpack3\out")
+CLEANUP = True  # 是否执行动画清理
+BASE_DIR = Path(str(cfg.get("increase_path")))
 # =============================================
 
 
@@ -244,7 +244,7 @@ def export_bundle(folder: Path, project_info: dict):
 
 
 # ========================== 主流程 ==========================
-def main():
+def sjemain():
     logger.info("🚀 Spine 批量导出工具启动")
     logger.info(f"基础目录: {BASE_DIR}")
     logger.info(f"Spine 版本: {VERSION}")
@@ -265,4 +265,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    sjemain()
