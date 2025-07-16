@@ -7,6 +7,7 @@ from PIL import Image
 from config_manager import cfg
 from atlas_unpack import split_atlas
 from concurrent.futures import ThreadPoolExecutor
+import json
 
 
 # 工具函数：检查目录是否存在
@@ -160,8 +161,10 @@ def convert_spine_single(filename, root, input_path, output_path):
     if json_content:
         json_filename = f"{clean_filename}.json"
         json_path = path.join(out_dir, json_filename)
+        _dict = json.loads(json_content)
+        _dict["images"] = "./images/"
         with open(json_path, 'w', encoding='utf-8') as json_file:
-            json_file.write(json_content)
+            json_file.write(json.dumps(_dict))
 
 
 def convert_atlas_single(filename, root):

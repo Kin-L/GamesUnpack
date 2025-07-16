@@ -19,9 +19,10 @@ CONFIG_NAME = "config.json"
 
 class ConfigManager:
     _REQUIRED_KEYS = \
-        ("ffm_path", "umo_path", "vgm_path", "spine_path",
+        ("ffm_path", "umo_path", "vgm_path", "quickbms_path", "spine_path",
+         "max_workers", "UseCNName",
          "pak_path", "unpack_path", "resource_path",
-         "past_path", "new_path", "increase_path")
+         "past_path", "new_path", "increase_path", )
     _TEMPLATE = {
         "ffm_path": r"{root}\tool\ffmpeg\bin\ffmpeg.exe",
         "umo_path": r"{root}\tool\umodel\umodel_materials.exe",
@@ -135,7 +136,7 @@ class ConfigManager:
 
     def _render_template(self) -> dict:
         """把 {root} 占位符替换成实际路径"""
-        return {k: v.format(root=ROOT_DIR) for k, v in self._TEMPLATE.items()}
+        return {k: v.format(root=ROOT_DIR) if isinstance(v, str) else v for k, v in self._TEMPLATE.items()}
 
     def _write(self, data: dict):
         """写磁盘；确保目录存在"""

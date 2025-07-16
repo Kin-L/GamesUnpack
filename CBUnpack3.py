@@ -17,6 +17,8 @@ else:
 vgm_path = str(cfg.get("vgm_path"))
 ffm_path = str(cfg.get("ffm_path"))
 UseCNName = cfg.get("UseCNName")
+
+
 # 工具函数：检查路径
 def check_dir(_path: str, desc: str) -> bool:
     if not path.isdir(_path):
@@ -54,31 +56,16 @@ def activity_ui(rootpath, out_path):
 
 
 def login_ui(rootpath, out_path):
-    _p1 = path.join(rootpath, r"Game\Content\Plot\CgPlot\Login_Plots")
-    _p2 = path.join(out_path, "Login_Plots")
+    _p1 = path.join(rootpath, r"Game\Content\Plot\CgPlot\Login_Plots\PoltAsset\Bg")
+    _p2 = path.join(out_path, r"Login_Plots\Bg")
     if not check_dir(_p1, "开始页面动画资源"):
         return
     makedirs(_p2, exist_ok=True)
-
-    try:
-        for entry in listdir(_p1):
-            if entry == "Login_Plots":
-                continue
-            pdp1 = path.join(_p1, entry)
-            if not path.isdir(pdp1):
-                continue
-            pdp2 = path.join(_p2, entry)
-            polt_asset = path.join(pdp1, "PoltAsset")
-            if path.isdir(polt_asset):
-                bg = path.join(polt_asset, "Bg")
-                if path.isdir(bg):
-                    convert_to_png(bg, path.join(pdp2, "Bg"))
-                convert_spine(path.join(polt_asset, "Spine"), pdp2)
-            else:
-                convert_to_png(pdp1, pdp2)
-                convert_spine(pdp1, pdp2)
-    except Exception as e:
-        logger.error(f"[login_ui] 出现异常: {e}")
+    convert_to_png(_p1, _p2)
+    _p1 = path.join(rootpath, r"Game\Content\Plot\CgPlot\Login_Plots\PoltAsset\Spine")
+    _p2 = path.join(out_path, r"Login_Plots")
+    convert_to_png(_p1, _p2)
+    convert_spine(_p1, _p2)
 
 
 def chara(rootpath, out_path):
@@ -87,14 +74,8 @@ def chara(rootpath, out_path):
     if not check_dir(_p1, "角色Spine资源"):
         return
     makedirs(_p2, exist_ok=True)
-
-    for entry in listdir(_p1):
-        pdp1 = path.join(_p1, entry)
-        if not path.isdir(pdp1):
-            continue
-        pdp2 = path.join(_p2, entry)
-        convert_to_png(pdp1, pdp2)
-        convert_spine(pdp1, pdp2)
+    convert_to_png(_p1, _p2)
+    convert_spine(_p1, _p2)
 
 
 def ser(rootpath, out_path):

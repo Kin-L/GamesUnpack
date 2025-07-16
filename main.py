@@ -1,4 +1,5 @@
-from os import path, makedirs
+import shutil
+from os import path, makedirs, getcwd
 import sys
 import time
 import winsound
@@ -105,20 +106,22 @@ def SnowUnpack():
     pak_path = str(cfg.get("pak_path"))
     quickbms_path = str(cfg.get("quickbms_path"))
     unpack_path = str(cfg.get("unpack_path"))
-
-    cmd = [quickbms_path,
-           "-o -F \"{}.pak\" ",
-           ".\\res\\unreal_tournament_4_0.4.27e_snowbreak.bms ",
-           f"\"{pak_path}\" ",
+    if path.exists(unpack_path):
+        shutil.rmtree(unpack_path)
+    makedirs(unpack_path)
+    cmd = [f"\"{quickbms_path}\"",
+           "-o -F \"{}.pak\"",
+           f"\"{getcwd()}\\res\\unreal_tournament_4_0.4.27e_snowbreak.bms\"",
+           f"\"{pak_path}\"",
            f"\"{unpack_path}\""]
-    subprocess.run(cmd)
+    subprocess.run(" ".join(cmd))
 
 
 def choice_CBUNpakMain():
     choice1 = questionary.select(
-        "请选择操作：",
+        "是否需要解密pak文件：",
         choices=[
-            {"name": "是否需要解密pak文件", "disabled": ""},  # 禁用选项
+            {"name": "请选择操作：", "disabled": ""},  # 禁用选项
             questionary.Separator(),  # 视觉分隔线
             {"name": "0.是", "value": True},
             {"name": "1.否", "value": False},
@@ -128,9 +131,9 @@ def choice_CBUNpakMain():
     # 处理用户选择
 
     choice2 = questionary.select(
-        "请选择操作：",
+        "提取全部默认资源 or 提取增量资源：",
         choices=[
-            {"name": "提取全部默认资源 or 提取增量资源", "disabled": ""},  # 禁用选项
+            {"name": "请选择操作：", "disabled": ""},  # 禁用选项
             questionary.Separator(),  # 视觉分隔线
             {"name": "0.提取全部默认资源", "value": 0},
             {"name": "1.提取增量资源", "value": 1},
@@ -140,9 +143,9 @@ def choice_CBUNpakMain():
     ).ask()
     if choice2 == 1:
         choice3 = questionary.select(
-            "请选择操作：",
+            "是否渲染Spine资源：",
             choices=[
-                {"name": "是否渲染Spine资源", "disabled": ""},  # 禁用选项
+                {"name": "请选择操作：", "disabled": ""},  # 禁用选项
                 questionary.Separator(),  # 视觉分隔线
                 {"name": "0.是", "value": 1},
                 {"name": "1.否", "value": 0},

@@ -24,10 +24,9 @@ def activity_ui(_past_path, _new_path, _increase_path):
     _p2 = path.join(_new_path, _path)
     _list = compare_folders_by_name(_p1, _p2)
     path_out = path.join(_increase_path, "CgPlot")
-    if not path.exists(path_out):
-        makedirs(path_out)
-    else:
+    if path.exists(path_out):
         shutil.rmtree(path_out)
+    makedirs(path_out)
     if _list[0]:
         print(f"删除：{_list[0]}")
     if _list[1]:
@@ -57,10 +56,9 @@ def activity_ui(_past_path, _new_path, _increase_path):
 
 def login_ui(_past_path, _new_path, _increase_path):
     path_out = path.join(_increase_path, "Login_Plots")
-    if not path.exists(path_out):
-        makedirs(path_out)
-    else:
+    if path.exists(path_out):
         shutil.rmtree(path_out)
+    makedirs(path_out)
     _path = r"Game\Content\Plot\CgPlot\Login_Plots\PoltAsset\Bg"
     _p1 = path.join(_past_path, _path)
     _p2 = path.join(_new_path, _path)
@@ -87,10 +85,9 @@ def login_ui(_past_path, _new_path, _increase_path):
 
 def ser(_past_path, _new_path, _increase_path):
     path_out = path.join(_increase_path, "Ser")
-    if not path.exists(path_out):
-        makedirs(path_out)
-    else:
+    if path.exists(path_out):
         shutil.rmtree(path_out)
+    makedirs(path_out)
     _path = r"Game\Content\UI\Pose\Ser"
     _p1 = path.join(_past_path, _path)
     _p2 = path.join(_new_path, _path)
@@ -105,10 +102,9 @@ def ser(_past_path, _new_path, _increase_path):
 
 def fashion(_past_path, _new_path, _increase_path):
     path_out = path.join(_increase_path, "Fashion")
-    if not path.exists(path_out):
-        makedirs(path_out)
-    else:
+    if path.exists(path_out):
         shutil.rmtree(path_out)
+    makedirs(path_out)
     _path = r"Game\Content\UI\Pose\Fashion"
     _p1 = path.join(_past_path, _path)
     _p2 = path.join(_new_path, _path)
@@ -123,10 +119,9 @@ def fashion(_past_path, _new_path, _increase_path):
 
 def dialogue(_past_path, _new_path, _increase_path):
     path_out = path.join(_increase_path, "Dialogue")
-    if not path.exists(path_out):
-        makedirs(path_out)
-    else:
+    if path.exists(path_out):
         shutil.rmtree(path_out)
+    makedirs(path_out)
     _path = r"Game\Content\UI\Picture\Dialogue"
     _p1 = path.join(_past_path, _path)
     _p2 = path.join(_new_path, _path)
@@ -166,11 +161,9 @@ def convert_audio_single(oldn, newn, path_out):
 
 def bgm(_past_path, _new_path, _increase_path):
     path_out = path.join(_increase_path, "BGM")
-    if not path.exists(path_out):
-        makedirs(path_out)
-    else:
+    if path.exists(path_out):
         shutil.rmtree(path_out)
-        makedirs(path_out)
+    makedirs(path_out)
     _path = r"Game\Content\Wwise\Windows"
     _p1 = path.join(_past_path, _path)
     _p2 = path.join(_new_path, _path)
@@ -287,9 +280,10 @@ def bgm(_past_path, _new_path, _increase_path):
 
 
 def chara(_past_path, _new_path, _increase_path):
-    path_out = path.join(_increase_path, "角色立绘spine")
-    if not path.exists(path_out):
-        makedirs(path_out)
+    path_out = path.join(_increase_path, "Hero")
+    if path.exists(path_out):
+        shutil.rmtree(path_out)
+    makedirs(path_out)
     _path = r"Game\Content\Spine\Hero"
     _p1 = path.join(_past_path, _path)
     _p2 = path.join(_new_path, _path)
@@ -299,7 +293,7 @@ def chara(_past_path, _new_path, _increase_path):
     if _list[1]:
         for i in _list[1]:
             pdp = path.join(_p2, i)
-            path_out = path.join(_increase_path, f"角色立绘spine\\{i}")
+            path_out = path.join(_increase_path, f"Hero\\{i}")
             convert_spine(pdp, path_out)
 
 
