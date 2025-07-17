@@ -277,6 +277,7 @@ if __name__ == "__main__":
         "quickbms_path": quickbms_4gb_files.exe 文件路径
         "spine_path": Spine.exe 文件路径
         "max_workers": 多线程数
+        "UseCNName": 提取音频文件时，文件名使用匹配到的中文名
         解密解包 设置路径
         "pak_path": snow_pak 文件夹路径
         "unpack_path": 解密完成，待提取资源 文件夹路径(可选，默认为 "./unpack")
