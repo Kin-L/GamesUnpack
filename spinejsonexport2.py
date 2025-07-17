@@ -3,9 +3,10 @@ from os import path, getcwd, remove, walk
 import json
 from concurrent.futures import ThreadPoolExecutor
 from loguru import logger
-from config_manager import cfg
+from config_manager import ConfigManager
 from pathlib import Path
 
+cfg = ConfigManager()
 SPINE_EXE = cfg.get("spine_path")
 ffm_path = str(cfg.get("ffm_path"))
 with open("res/template.export.json", 'r', encoding='utf-8') as f:
@@ -116,7 +117,7 @@ def exportSpineJson(input_json_path, out_path=None):
 def sjemain():
     max_workers = cfg.get("max_workers")
 
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+    with ThreadPoolExecutor(max_workers=max_workers) as executor: # type: ignore
         # 提交所有任务到线程池，并传入索引 i
         futures = [
             executor.submit(exportSpineJson, json_file, None)
@@ -130,6 +131,6 @@ def sjemain():
 
 # 使用示例
 if __name__ == "__main__":
-    # INPUT_JSON = r"E:\Unpack\尘白禁区\登录界面spine\sp_login_bg019\sp_login_bg019.json"
-    # exportSpineJson(INPUT_JSON)
-    convert_mov_to_mp4(r"E:\Unpack\尘白禁区\登录界面spine\sp_login_bg019\sp_login_bg019.mov")
+    INPUT_JSON = r"H:\SnowbreakContainmentZone\V3.0.0.130-20250710\UNPAK\out\CgPlot\Dlc18_plots\sp_pic_dlc18_bg001\sp_pic_dlc18_bg001.json"
+    exportSpineJson(INPUT_JSON)
+    # convert_mov_to_mp4(r"E:\Unpack\尘白禁区\登录界面spine\sp_login_bg019\sp_login_bg019.mov")

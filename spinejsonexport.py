@@ -4,9 +4,10 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
 from loguru import logger
 from concurrent.futures import ThreadPoolExecutor
-from config_manager import cfg
+from config_manager import ConfigManager
 
 # ================== 可配置区 ==================
+cfg = ConfigManager()
 ffm_path = str(cfg.get("ffm_path"))  # 获取配置中的 FFMPEG 路径
 spine_path = str(cfg.get("spine_path"))  # 获取配置中的 FFMPEG 路径
 max_workers = cfg.get("max_workers")  # 多线程数
@@ -15,7 +16,7 @@ VERSION = "3.8.75"  # 须与安装包版本一致
 DEFAULT_OUTPUT_DIR = "export"  # 默认输出目录
 DEFAULT_TEMPLATE_NAME = "template.export.json"  # 自动生成的模板文件名
 CLEANUP = True  # 是否执行动画清理
-BASE_DIR = Path(r"E:\Unpack\尘白禁区\increase\Login_Plots")
+BASE_DIR = Path(r"H:\SnowbreakContainmentZone\V3.0.0.130-20250710\UNPAK\out\CgPlot\Dlc18_plots")
 # BASE_DIR = Path(str(cfg.get("increase_path")))
 
 
@@ -255,7 +256,7 @@ def sjemain():
         logger.warning("⚠️ 未找到任何可导出的项目，程序退出")
         return
 
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+    with ThreadPoolExecutor(max_workers=max_workers) as executor: # type: ignore
         # 提交所有任务到线程池，并传入索引 i
         futures = []
         for folder, project_info in projects:
@@ -264,13 +265,13 @@ def sjemain():
                 file_type = "骨架文件"
                 futures.extend([
                     executor.submit(_export_single, folder, project_info, skeleton_file, file_type)
-                    for skeleton_file in project_info["skeletons"]
+                    for skeleton_file in project_info["skeletons"] # type: ignore
                 ])
             else:
                 file_type = "项目文件"
                 futures.extend([
                     executor.submit(_export_single, folder, project_info, project_file, file_type)
-                    for project_file in project_info["projects"]
+                    for project_file in project_info["projects"] # type: ignore
                 ])
 
         # 可选：等待所有任务完成（with 语句会自动等待）
