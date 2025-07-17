@@ -5,7 +5,7 @@ import subprocess
 import sys
 from loguru import logger
 from convert import convert_to_png, convert_spine
-from config_manager import cfg
+from config_manager import ConfigManager
 from check import check_tool_availability
 from concurrent.futures import ThreadPoolExecutor
 
@@ -14,6 +14,8 @@ if '__compiled__' in globals():
     root_directory = sys.path[0]
 else:
     root_directory = path.dirname(path.abspath(__file__))
+
+cfg = ConfigManager()
 vgm_path = str(cfg.get("vgm_path"))
 ffm_path = str(cfg.get("ffm_path"))
 UseCNName = cfg.get("UseCNName")
