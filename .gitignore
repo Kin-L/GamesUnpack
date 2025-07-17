@@ -8,4 +8,4 @@ dist/logs
 dist/config.json
 dist/out
 dist/main.dist
-
+.temp

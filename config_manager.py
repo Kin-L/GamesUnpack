@@ -18,6 +18,7 @@ CONFIG_NAME = "config.json"
 
 
 class ConfigManager:
+    Json_list = []
     _REQUIRED_KEYS = \
         ("ffm_path", "umo_path", "vgm_path", "quickbms_path", "spine_path",
          "max_workers", "UseCNName",

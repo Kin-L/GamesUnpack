@@ -154,6 +154,7 @@ def choice_CBUNpakMain():
         ).ask()
     else:
         choice3 = 0
+    cfg.Json_list = []
     # 处理用户选择
     if choice1:
         SnowUnpack()

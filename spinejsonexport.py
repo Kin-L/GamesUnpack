@@ -15,7 +15,8 @@ VERSION = "3.8.75"  # 须与安装包版本一致
 DEFAULT_OUTPUT_DIR = "export"  # 默认输出目录
 DEFAULT_TEMPLATE_NAME = "template.export.json"  # 自动生成的模板文件名
 CLEANUP = True  # 是否执行动画清理
-BASE_DIR = Path(str(cfg.get("increase_path")))
+BASE_DIR = Path(r"E:\Unpack\尘白禁区\increase\Login_Plots")
+# BASE_DIR = Path(str(cfg.get("increase_path")))
 
 
 # =============================================
@@ -185,10 +186,10 @@ def run_spine(cmd: List[str], project_name: str):
     try:
         result = subprocess.run(
             cmd,
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace"
+            # capture_output=True,
+            # text=True,
+            # encoding="utf-8",
+            # errors="replace"
         )
 
         if result.returncode == 0:
@@ -224,13 +225,13 @@ def _export_single(folder: Path, project_info: dict, input_file: Path, file_type
 
     cmd = [
         str(SPINE_EXE),
-        "--update", VERSION,
-        "--input", str(input_file),
-        "--export", str(export_json)
+        # "--update", VERSION,
+        # "-i", str(input_file),
+        "-e", str(export_json)
     ]
 
-    if CLEANUP:
-        cmd.append("--clean")
+    # if CLEANUP:
+    #     cmd.append("--clean")
 
     run_spine(cmd, input_file.stem)
 

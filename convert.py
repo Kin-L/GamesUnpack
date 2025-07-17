@@ -165,6 +165,7 @@ def convert_spine_single(filename, root, input_path, output_path):
         _dict["images"] = "./images/"
         with open(json_path, 'w', encoding='utf-8') as json_file:
             json_file.write(json.dumps(_dict))
+            cfg.Json_list.append(json_path)
 
 
 def convert_atlas_single(filename, root):
