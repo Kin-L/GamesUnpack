@@ -4,6 +4,7 @@ import json
 from concurrent.futures import ThreadPoolExecutor
 from config_manager import ConfigManager
 from pathlib import Path
+from loguru import logger  # ✅ 添加 logger
 
 cfg = ConfigManager()
 SPINE_EXE = cfg.get("spine_path")
@@ -24,17 +25,17 @@ def exportSpineJson(input_json_path, out_path=None):
         "-r", "cache"
     ]
     try:
-        print(f"正在导入 {_INPUT_JSON} 到 Spine 项目...")
+        logger.info(f"[→] 正在导入 {_INPUT_JSON} 到 Spine 项目...")
         subprocess.run(cmd, check=True)
-        print(f"成功创建 Spine 项目: {OUTPUT_SPINE}")
+        logger.success(f"[✔] 成功创建 Spine 项目: {OUTPUT_SPINE}")
     except subprocess.CalledProcessError as e:
-        print(f"导入失败: {e}")
+        logger.error(f"[✖] Spine 项目导入失败: {e}")
         return
     except Exception as e:
-        print(f"发生错误: {e}")
+        logger.exception(f"[✖] 未知错误，无法导入 Spine 项目: {e}")
         return
 
-        # 读取JSON文件
+    # 读取JSON文件
     with open(_INPUT_JSON, 'r', encoding='utf-8') as file:
         ijdata = json.load(file)
     ejdata = dict(ejtdata)
@@ -50,22 +51,25 @@ def exportSpineJson(input_json_path, out_path=None):
         else:
             ejdata["output"] = Path(_INPUT_JSON).parent
     ejdata["project"] = OUTPUT_SPINE
+
     with open(Export_JSON, 'w', encoding='utf-8') as file:
         json.dump(ejdata, file, ensure_ascii=False, indent=4)
+
     cmd = [
         SPINE_EXE,
         "-e", Export_JSON
     ]
     try:
-        print(f"正在渲染导出 {_INPUT_JSON} ...")
+        logger.info(f"[→] 正在渲染导出 {_INPUT_JSON} ...")
         subprocess.run(cmd, check=True)
-        print(f"成功导出: {_INPUT_JSON}")
+        logger.success(f"[✔] 成功导出动画: {_INPUT_JSON}")
     except subprocess.CalledProcessError as e:
-        print(f"导入失败: {e}")
+        logger.error(f"[✖] 渲染导出失败: {e}")
         return
     except Exception as e:
-        print(f"发生错误: {e}")
+        logger.exception(f"[✖] 未知错误，无法渲染导出: {e}")
         return
+
     remove(Export_JSON)
     remove(OUTPUT_SPINE)
 
@@ -84,6 +88,7 @@ def sjemain():
         for future in futures:
             future.result()  # 检查是否有异常
 
+    logger.success("🏁 SPINE动画 导出任务全部完成！")
 
 # 使用示例
 if __name__ == "__main__":

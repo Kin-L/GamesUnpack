@@ -3,9 +3,11 @@ from convert import convert_to_png, convert_spine, png_convert
 import shutil
 import subprocess
 from loguru import logger
-from config_manager import cfg
+from config_manager import ConfigManager
 from check import check_tool_availability
 from concurrent.futures import ThreadPoolExecutor
+
+cfg = ConfigManager()
 UseCNName = cfg.get("UseCNName")
 vgm_path = str(cfg.get("vgm_path"))
 
