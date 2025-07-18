@@ -184,6 +184,7 @@ def choice_alone():
             {"name": "0.PAK文件独立解密", "value": "UNPAK"},
             {"name": "1.SPINE动画独立渲染", "value": "SPINE"},
             {"name": "2.BGM背景音乐独立分离打标", "value": "BGM"},
+            {"name": "3.VOICE女孩语音独立分离打标", "value": "VOICE"},
         ],
         use_arrow_keys=True  # 启用箭头导航
     ).ask()
@@ -193,6 +194,8 @@ def choice_alone():
     elif choice == "SPINE":
         choice_debug()
     elif choice == "BGM":
+        choice_debug()
+    elif choice == "VOICE":
         choice_debug()
     elif choice is None:
         logger.debug("检测程序已被用户中断，正在退出...")

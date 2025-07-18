@@ -19,6 +19,7 @@ CONFIG_NAME = "config.json"
 
 class ConfigManager:
     Json_list = []
+    _loaded_once = False
     _REQUIRED_KEYS = \
         ("ffm_path", "umo_path", "vgm_path", "quickbms_path", "spine_path",
          "max_workers", "UseCNName",
@@ -115,7 +116,9 @@ class ConfigManager:
                     data = json.load(f)
                 if self._validate_config(data):
                     self.config = data
-                    logger.info("配置文件读取成功！")
+                    if not ConfigManager._loaded_once:
+                        logger.info("配置文件读取成功！")
+                        ConfigManager._loaded_once = True
                     return
                 logger.warning("配置缺键或损坏，将重建")
                 need_create = True
