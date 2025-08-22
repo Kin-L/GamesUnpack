@@ -35,7 +35,7 @@ logger.info('''
 ''')
 
 # 版本号和构建时间
-VER = "3.0.5"
+VER = "3.0.6"
 BUILD = "2025-7"
 
 if '__compiled__' in globals():
@@ -75,7 +75,8 @@ def main_menu():
                 {"name": "0.设置文件重置", "value": "reset"},
                 {"name": "1.测试第三方exe有效性", "value": "check"},
                 {"name": "2.开始解包", "value": "CBUNpakMain"},
-                {"name": "3.待开发", "value": "alone"},
+                {"name": "3.独立小工具", "value": "alone"},
+                {"name": "4.待开发", "value": "debug"},
                 questionary.Separator(),  # 添加视觉分隔线
                 {"name": "by 绘星痕、小狐狸", "disabled": BUILD}  # 禁用选项
             ],
@@ -91,6 +92,8 @@ def main_menu():
             choice_check()
         elif choice == "alone":
             choice_alone()
+        elif choice == "debug":
+            choice_debug()
         elif choice is None:
             logger.debug("检测程序已被用户中断，正在退出...")
             sys.exit(0)
@@ -171,8 +174,35 @@ def choice_CBUNpakMain():
         if choice3:
             sjemain()
 
-
 def choice_alone():
+    cfg = ConfigManager()
+    choice = questionary.select(
+        "小工具合集",
+        choices=[
+            {"name": "请选择：", "disabled": "↑↓选择"},  # 禁用选项
+            questionary.Separator(),  # 视觉分隔线
+            {"name": "0.PAK文件独立解密", "value": "UNPAK"},
+            {"name": "1.SPINE动画独立渲染", "value": "SPINE"},
+            {"name": "2.BGM背景音乐独立分离打标", "value": "BGM"},
+            {"name": "3.VOICE女孩语音独立分离打标", "value": "VOICE"},
+        ],
+        use_arrow_keys=True  # 启用箭头导航
+    ).ask()
+    # 处理用户选择
+    if choice == "UNPAK":
+        choice_debug()
+    elif choice == "SPINE":
+        choice_debug()
+    elif choice == "BGM":
+        choice_debug()
+    elif choice == "VOICE":
+        choice_debug()
+    elif choice is None:
+        logger.debug("检测程序已被用户中断，正在退出...")
+        sys.exit(0)
+
+
+def choice_debug():
     logger.warning("Ciallo～(∠・ω< )⌒★...")
     audio_path = resource_path("Ciallo.wav")
     winsound.PlaySound(audio_path, winsound.SND_ASYNC)
