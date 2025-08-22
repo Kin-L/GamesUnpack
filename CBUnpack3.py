@@ -291,7 +291,10 @@ def bgm(rootpath, out_path):
     # return
     # 解码 wem → flac
     max_workers = min(32, (cpu_count() or 1) * 4)
-
+    print(wem_names)
+    print(nnli)
+    print(_sheet)
+    print(cnnali)
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         # 提交所有任务到线程池，并传入索引 i
         futures = [

@@ -10,7 +10,7 @@ from CBUnpack3 import CBUNpakMain
 from CBUnpack import CBUNpakIncr
 from check import check_tool_availability
 import subprocess
-from spinejsonexport import sjemain
+from spinejsonexport2 import sjemain
 from config_manager import ConfigManager
 
 

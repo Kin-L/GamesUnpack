@@ -16,8 +16,8 @@ VERSION = "3.8.75"  # 须与安装包版本一致
 DEFAULT_OUTPUT_DIR = "export"  # 默认输出目录
 DEFAULT_TEMPLATE_NAME = "template.export.json"  # 自动生成的模板文件名
 CLEANUP = True  # 是否执行动画清理
-BASE_DIR = Path(r"H:\SnowbreakContainmentZone\V3.0.0.130-20250710\UNPAK\out\CgPlot\Dlc18_plots")
-# BASE_DIR = Path(str(cfg.get("increase_path")))
+# BASE_DIR = Path(r"H:\SnowbreakContainmentZone\V3.0.0.130-20250710\UNPAK\out\CgPlot\Dlc18_plots")
+BASE_DIR = Path(str(cfg.get("increase_path")))
 
 
 # =============================================

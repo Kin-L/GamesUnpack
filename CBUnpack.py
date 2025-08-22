@@ -323,21 +323,27 @@ def bgm(_past_path, _new_path, _increase_path):
     if UseCNName:
         cnnali = [i[8] if len(i) == 8 else "" for i in _sheet]
         nnli = []
+        onli = []
         for i in _sheet:
+            onli.append(i[0])
             if len(i) == 8 and 1 == cnnali.count(cnna := i[8]):
                 nnli.append(f"{cnna} - 尘白禁区")
             else:
                 nnli.append(i[0])
     else:
+        onli = list(_list)
         nnli = list(_list)
 
     max_workers = min(32, (cpu_count() or 1) * 4)
-
+    # print(_list)
+    # print(nnli)
+    # print(_sheet)
+    # print(cnnali)
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         # 提交所有任务到线程池，并传入索引 i
         futures = [
             executor.submit(convert_audio_single, oldn, newn, path_out)
-            for oldn, newn in zip(_list, nnli)
+            for oldn, newn in zip(onli, nnli)
         ]
 
         # 可选：等待所有任务完成（with 语句会自动等待）
@@ -394,12 +400,12 @@ def CBUNpakIncr():
 
     logger.info("开始资源解包流程...")
 
-    activity_ui(past_path, new_path, increase_path)
-    login_ui(past_path, new_path, increase_path)
+    # activity_ui(past_path, new_path, increase_path)
+    # login_ui(past_path, new_path, increase_path)
     bgm(past_path, new_path, increase_path)
-    chara(past_path, new_path, increase_path)
-    ser(past_path, new_path, increase_path)
-    fashion(past_path, new_path, increase_path)
-    dialogue(past_path, new_path, increase_path)
+    # chara(past_path, new_path, increase_path)
+    # ser(past_path, new_path, increase_path)
+    # fashion(past_path, new_path, increase_path)
+    # dialogue(past_path, new_path, increase_path)
 
     logger.success("资源处理完成 ✅")
